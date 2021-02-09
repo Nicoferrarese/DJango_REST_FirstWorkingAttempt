@@ -1,7 +1,11 @@
 from django.conf.urls import url
 from record import views
 
+from rest_framework.urlpatterns import format_suffix_patterns
+
 urlpatterns = [
     url(r'^api$', views.record_list),
-    #url(r'^api/record/(?P<pk>[0-9]+)$', views.tutorial_detail) da fare simile con filtri per records
+    url(r'^api/record/(?P<start>[\w\d-]+)&(?P<finish>[\w\d-]+)&(?P<group_time>[\w\d-]+)$', views.record_detail)
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)

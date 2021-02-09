@@ -6,7 +6,6 @@ class RecordSerial(serializers.ModelSerializer):
     class Meta:
         model = TAIFAIMeasure
         fields = ('applicableCategory3LightLevel',
-                  'applicableCategory3CategoryLightLevel',
                   'taiMeasurePeriod',
                   'taiLane1NumberOfVehicles',
                   'taiLane2NumberOfVehicles',
