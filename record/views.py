@@ -16,19 +16,24 @@ def record_list(request):
 
 
 def record_detail(request, start, finish, group_time, format=None):
-    start = 0
-    finish = 161387292400
+    #start = 0
+    #finish = 161387292400
     queryset = TAIFAIMeasure.objects.filter(measureTimestamp__gte=start,
                                             measureTimestamp__lte=finish).order_by('measureTimestamp')
-    print("Record-Detail_request")
+    #print("Record-Detail_request")
     for x in queryset:
-        print('timestamp: {d}'.format(d=x.measureTimestamp))
+        #print('timestamp: {d}'.format(d=x.measureTimestamp))
         group_time = int(group_time)
         x.taiLane1NumberOfVehicles = math.trunc(x.taiLane1NumberOfVehicles * (60 / x.taiMeasurePeriod))
         x.taiLane2NumberOfVehicles = math.trunc(x.taiLane2NumberOfVehicles * (60 / x.taiMeasurePeriod))
-        print('vehicles per hour: {d}'.format(d=x.taiLane1NumberOfVehicles))
+        #print('vehicles per hour: {d}'.format(d=x.taiLane1NumberOfVehicles))
 
     result = result_normalizer(queryset, group_time)
+    # print("sending:")
+    # for x in result:
+        # x.measureTimestamp = 1606376204040
+        # print('-->timestamp: {d}'.format(d=x.measureTimestamp))
+        # print('-->vehicles per hour: {d}'.format(d=x.taiLane1NumberOfVehicles))
     record_serializer = RecordSerial(result, many=True)
     return JsonResponse(record_serializer.data, safe=False)
 
@@ -59,8 +64,6 @@ def result_normalizer(queryset, minutes_to_group):
 
 
 def adder(record: TAIFAIMeasure, value: TAIFAIMeasure):
-    print(value.taiLane1NumberOfVehicles)
-    print(record.taiLane1NumberOfVehicles)
     record.taiLane1NumberOfVehicles += value.taiLane1NumberOfVehicles
     record.taiLane2NumberOfVehicles += value.taiLane2NumberOfVehicles
     record.applicableCategory1LightLevel += value.applicableCategory1LightLevel
