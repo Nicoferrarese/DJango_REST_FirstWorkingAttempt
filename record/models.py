@@ -12,7 +12,7 @@ class TAIFAIMeasure(models.Model):
     taiLane1NumberOfVehicles = models.IntegerField(blank=False, default=10)     #TVA = TAI Numero veicoli corsia 1 nel periodo TAI considerato
     taiLane2NumberOfVehicles = models.IntegerField(blank=False, default=20)     #TVB = TAI Numero veicoli corsia 2 nel periodo TAI considerato
     taiMeasurePeriod = models.IntegerField(blank=False, default=10)
-    measureTimestamp = models.BigIntegerField( blank=False, default=161287292402)
+    measure_timestamp = models.BigIntegerField( blank=False, default=161287292402)
     applicableCategory1LightLevel = models.IntegerField(blank=False, default=0)
     applicableCategory2LightLevel = models.IntegerField(blank=False, default=0)
     applicableCategory3LightLevel = models.IntegerField(blank=False, default=0)
