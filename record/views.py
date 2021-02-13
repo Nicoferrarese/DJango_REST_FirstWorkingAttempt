@@ -13,17 +13,6 @@ def INFLUX_API():
     retention_policy = 'autogen'
     bucket = f'{database}/{retention_policy}'
     client = InfluxDBClient(url='http://localhost:8086', token=f'{username}:{password}', org='-')
-    """
-    print('*** Write Points ***')
-
-    write_api = client.write_api()
-
-    point = Point("mem").tag("host", "host1").field("used_percent", 25.43234543)
-    print(point.to_line_protocol())
-
-    write_api.write(bucket=bucket, record=point)
-    write_api.__del__()
-    """
     print('*** INFLUXDB Query_Result ***')
     query_api = client.query_api()
     query = f'from(bucket: "'+bucket+'")\
