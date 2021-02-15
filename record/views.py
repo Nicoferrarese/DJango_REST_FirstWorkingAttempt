@@ -5,6 +5,7 @@ from record.models import TAIFAIMeasure
 from record.serializers import RecordSerial
 from rest_framework.decorators import api_view
 from influxdb_client import InfluxDBClient
+@api_view(['GET', 'POST', 'DELETE'])
 
 def INFLUX_API():
     username = ''
@@ -13,7 +14,6 @@ def INFLUX_API():
     retention_policy = 'autogen'
     bucket = f'{database}/{retention_policy}'
     client = InfluxDBClient(url='http://localhost:8086', token=f'{username}:{password}', org='-')
-    print('*** INFLUXDB Query_Result ***')
     query_api = client.query_api()
     query = f'from(bucket: "'+bucket+'")\
     |> range(start: -24h)\
@@ -35,32 +35,30 @@ def INFLUX_API():
     tables = query_api.query(query)
     client.close()
     return tables
-def record_database_timescale(request):
-    query = 'SELECT extract(epoch from (time_bucket(\'30 minutes\', time at time zone \'utc\' at time zone \'cet\'))) AS five_min,\
-                    1 as id,\
-                    ROUND(avg("measure_taiMeasurePeriod")::numeric,0) as "taiMeasurePeriod",\
-                    ROUND(avg("measure_taiLane1NumberOfVehicles")::numeric,0) as "taiLane1NumberOfVehicles",\
-                    ROUND(avg("measure_taiLane2NumberOfVehicles")::numeric,0) as "taiLane2NumberOfVehicles",\
-                    ROUND(avg("measure_applicableCategory1LightLevel")::numeric,0) as "applicableCategory1LightLevel",\
-                    ROUND(avg("measure_applicableCategory2LightLevel")::numeric,0) as "applicableCategory2LightLevel",\
-                    ROUND(avg("measure_applicableCategory3LightLevel")::numeric,0) as "applicableCategory3LightLevel",\
-                    ROUND(avg("measure_applicableCategory4LightLevel")::numeric,0) as "applicableCategory4LightLevel",\
-                    ROUND(avg("measure_applicableCategory5LightLevel")::numeric,0) as "applicableCategory5LightLevel",\
-                    ROUND(avg("measure_applicableCategory6LightLevel")::numeric,0) as "applicableCategory6LightLevel",\
-                    ROUND(avg("measure_applicableCategory7LightLevel")::numeric,0) as "applicableCategory7LightLevel"\
-                    FROM mqtt_consumer\
-              GROUP BY five_min\
-              ORDER BY five_min'
-    """
-                    where measure_timestamp > 1613177094796\
-                    and measure_timestamp < 1613189204629"""
+def record_database_timescale(request, start, finish, group_time):
+    group_time = group_time.replace("_", " ")
+    query = ('SELECT extract(epoch from (time_bucket(\'%s\', time at time zone \'utc\' at time zone \'cet\'))) AS five_min,'
+                    '1 as id,'
+                    'ROUND(avg("measure_taiMeasurePeriod")::numeric,0) as "taiMeasurePeriod",'
+                    'ROUND(avg("measure_taiLane1NumberOfVehicles")::numeric,0) as "taiLane1NumberOfVehicles",'
+                    'ROUND(avg("measure_taiLane2NumberOfVehicles")::numeric,0) as "taiLane2NumberOfVehicles",'
+                    'ROUND(avg("measure_applicableCategory1LightLevel")::numeric,0) as "applicableCategory1LightLevel",'
+                    'ROUND(avg("measure_applicableCategory2LightLevel")::numeric,0) as "applicableCategory2LightLevel",'
+                    'ROUND(avg("measure_applicableCategory3LightLevel")::numeric,0) as "applicableCategory3LightLevel",'
+                    'ROUND(avg("measure_applicableCategory4LightLevel")::numeric,0) as "applicableCategory4LightLevel",'
+                    'ROUND(avg("measure_applicableCategory5LightLevel")::numeric,0) as "applicableCategory5LightLevel",'
+                    'ROUND(avg("measure_applicableCategory6LightLevel")::numeric,0) as "applicableCategory6LightLevel",'
+                    'ROUND(avg("measure_applicableCategory7LightLevel")::numeric,0) as "applicableCategory7LightLevel"'
+                    'FROM mqtt_consumer '
+                    'where measure_timestamp > %s and measure_timestamp < %s'
+                    " GROUP BY five_min "
+                    " ORDER BY five_min ") % (group_time, start, finish)
     records = TAIFAIMeasure.objects.raw(query)
     for record in records:
         record.measure_timestamp = record.five_min * 1000
     record_serializer = RecordSerial(records, many=True)
     return JsonResponse(record_serializer.data, safe=False)
 
-@api_view(['GET', 'POST', 'DELETE'])
 def record_database_influx(request):
     tables = INFLUX_API()
     toSend = []
@@ -83,13 +81,6 @@ def record_database_influx(request):
     record_serializer = RecordSerial(toSend, many=True)
     return JsonResponse(record_serializer.data, safe=False)
 
-
-def record_list(request):
-    if request.method == 'GET':
-        records = TAIFAIMeasure.objects.all()
-        print(records)
-        record_serializer = RecordSerial(records)
-        return JsonResponse(record_serializer.data)
 
 
 def record_detail(request, start, finish, group_time, format=None):
